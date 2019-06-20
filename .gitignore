@@ -72,6 +72,12 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# IDE stuff
+.idea
+
+# Dataset
+lfw_dataset/
+
 # pyenv
 .python-version
 
