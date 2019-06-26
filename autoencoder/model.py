@@ -1,3 +1,4 @@
+import numpy as np
 from keras.optimizers import Adam
 from keras.models import Model, Sequential
 from keras.layers import Input, InputLayer, Dense, BatchNormalization, Dropout, Flatten, Reshape
@@ -29,15 +30,18 @@ class Autoencoder:
 
     # \brief Predict method wrapper
     def predict(self, data):
+        assert np.min(data) >= 0 and np.max(data) <= 1
         return self.autoencoder.predict(data)
 
     # \brief Single image predict wrapper
     def predict_img(self, img):
+        assert np.min(img) >= 0 and np.max(img) <= 1
         # img[None] is the same as img[np.newaxis, :]
         return self.autoencoder.predict(img[None])[0]
 
     # \brief Single code predict wrapper
     def predict_img_code(self, img):
+        assert np.min(img) >= 0 and np.max(img) <= 1
         # img[None] is the same as img[np.newaxis, :]
         return self.encoder.predict(img[None])[0]
 
@@ -85,18 +89,25 @@ class Autoencoder:
         return encoder, decoder
 
 
-
-import numpy as np
+'''
+# test
 import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings('ignore')
 
-def show_image(x,dims=(90,90,3)):
+def reconstruct_image(x,dims=(90,90,3)):
     img = x.reshape(*dims)*255.0
-    img = (img - np.min(img)) / (np.max(img) - np.min(img))
-    plt.imshow(img, cmap=plt.cm.gray, vmin=-1, vmax=1, interpolation='nearest')
+    #img = (img - np.min(img)) / (np.max(img) - np.min(img))
+    return img
 
 ae = Autoencoder()
 ae.load_weights()
 data = np.load('lfw_dataset/data_90.npy')
-show_image(ae.predict_img(data[0]))
+img = reconstruct_image(ae.predict_img(data[0]/255.))
+
+from skimage.io import imsave
+imsave('clean_img.jpg', data[0])
+imsave('mod_img.jpg', img)
+  
+print("finished!")  
+'''
