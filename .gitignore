@@ -76,7 +76,7 @@ target/
 .idea
 
 # Dataset
-lfw_dataset/
+autoencoder/lfw_dataset/
 
 # pyenv
 .python-version
