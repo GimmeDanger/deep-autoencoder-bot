@@ -2,11 +2,18 @@ import telebot
 from telebot import apihelper
 from itertools import cycle
 
+import numpy as np
+from random import randint
+from skimage.io import imread, imsave
 
 class TelebotWrapper(telebot.TeleBot):
 
-    # tracking user id
-    id_set = set()
+    # tracking user data
+    # (user id : {random_img, (mu_code, sigma_var), user_img}
+    captured_data_dict = dict()
+    
+    # preloaded resized dataset for examples
+    dataset = np.load("autoencoder/lfw_dataset/data_90.npy")
 
     # proxy switching list,
     # thanks to https://github.com/uburuntu
@@ -26,4 +33,38 @@ class TelebotWrapper(telebot.TeleBot):
 
     def set_proxy(self):
         apihelper.proxy = {'https': next(self.curr_proxy)}
-        apihelper._get_req_session(reset=True)
+        apihelper._get_req_session(reset=True)      
+        
+        
+    ######################################################    
+    
+    # TODO: convert without dumping
+    # this function is very disgusting
+    @staticmethod
+    def to_photo(np_img):
+      np_img = (np_img - np.min(np_img)) / (np.max(np_img) - np.min(np_img))
+      imsave('tmp.jpg', np_img)
+      photo = open('tmp.jpg', 'rb')
+      return photo
+        
+    def capture_data_random_img(self, user_id):
+      rand_i = randint(0, len(self.dataset)-1)
+      self.captured_data_dict[user_id] = (self.dataset[rand_i], None, None)
+      
+    def capture_data_normal_code(self, user_id, mu, sigma):
+      self.captured_data_dict[user_id] = (None, (mu, sigma), None)
+      
+    def capture_data_user_img(self, user_id, img):
+      self.captured_data_dict[user_id] = (None, None, img)
+      
+    def get_captured_data(self, user_id):
+      if user_id not in self.captured_data_dict:
+        return None
+      val = self.captured_data_dict[user_id]
+      # TODO: search how to refactor this
+      if val[0] is not None:
+        return val[0]
+      elif val[1] is not None:
+        return val[1]
+      else:
+        return val[2]

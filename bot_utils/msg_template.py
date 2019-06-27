@@ -6,6 +6,17 @@ class MsgTemplate():
     @staticmethod
     def help_respond():
         return 'help msg respond'
+      
+    @staticmethod
+    def random_img_respond(sucess=True):
+        if sucess:
+            return ""
+        else:
+            return "ooops! try again"
+      
+    @staticmethod
+    def normal_code_respond():
+        return 'normal_code msg respond'  
 
     @staticmethod
     def get_photo_respond(sucess=True):

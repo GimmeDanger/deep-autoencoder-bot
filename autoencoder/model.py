@@ -75,12 +75,6 @@ class Autoencoder:
         img = img.astype('float32')
         return img
 
-    # \brief Restore photo format for correct plotting
-    def restore_photo_format(self, reconstructed_photo):
-        img = reconstructed_photo.reshape(*self.img_shape)
-        img = (img - np.min(img)) / (np.max(img) - np.min(img))        
-        return Image.fromarray(img)
-
     # \brief Feed network with raw_jpg
     def feed_photo(self, raw_jpg):
         formatted_img = self.prepare_photo_before_feeding(raw_jpg)

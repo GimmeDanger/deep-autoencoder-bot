@@ -10,13 +10,13 @@ import tokens
 import telebot
 from bot_utils.telebot_wrapper import TelebotWrapper
 from bot_utils.msg_template import MsgTemplate
-from telebot.types import InlineKeyboardButton as Button, InlineKeyboardMarkup
+from telebot.types import InlineKeyboardButton as Button, InlineKeyboardMarkup, InputMediaPhoto
 
 
 bot = TelebotWrapper(tokens.bot, threaded=False)
 ae = Autoencoder(load_pretrained_weights=True,
-                 encoder_weights_path = 'autoencoder/model_weights/encoder_weights.txt',
-                 decoder_weights_path = 'autoencoder/model_weights/decoder_weights.txt')
+                 encoder_weights_path='autoencoder/model_weights/encoder_weights.txt',
+                 decoder_weights_path='autoencoder/model_weights/decoder_weights.txt')
 
 def commands_handler(cmnds):
     def wrapped(message):
@@ -35,25 +35,87 @@ def command_start(message):
 def command_help(message):
     bot.send_message(message.chat.id, MsgTemplate.help_respond())
     
-def heheh(call):
-  print(12312312)
-  message = call.message
-  text = '12312'
-  bot.edit_message_text(chat_id=message.chat.id, message_id=message.message_id, text=text, parse_mode='HTML')
-  #bot.edit_message_reply_markup(chat_id=message.chat.id, message_id=message.message_id, reply_markup=keyboard)
-  bot.answer_callback_query(callback_query_id=call.id, show_alert=False, text=text)    
     
-@bot.callback_query_handler(func=lambda call: call.data.startswith('heheh'))
+################ Capturing random image from dataset  ######################  
+
+
+def random_img_predict_keybord():
+  keyboard = InlineKeyboardMarkup()
+  keyboard.add(Button(text='🤖', callback_data='random_img_predict'),
+               Button(text='🎲', callback_data='random_img_dice'),)
+  return keyboard
+
+def random_img_restore_keybord():
+  keyboard = InlineKeyboardMarkup()
+  keyboard.add(Button(text='🤦', callback_data='random_img_restore'),
+               Button(text='🎲', callback_data='random_img_dice'),)
+  return keyboard
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_dice'))
+def callback_random_img_dice(call):
+    bot.capture_data_random_img(call.message.chat.id)
+    np_img = bot.get_captured_data(call.message.chat.id)
+    if np_img is not None:
+      photo = TelebotWrapper.to_photo(np_img)
+      bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
+                             media=InputMediaPhoto(photo), reply_markup=random_img_predict_keybord())
+      bot.answer_callback_query(callback_query_id=call.id, show_alert=False)
+      
+@bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_restore'))
+def callback_random_img_predict(call):
+    np_img = bot.get_captured_data(call.message.chat.id)
+    if np_img is not None:
+      photo = TelebotWrapper.to_photo(np_img)
+      bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
+                             media=InputMediaPhoto(photo), reply_markup=random_img_predict_keybord())
+      bot.answer_callback_query(callback_query_id=call.id, show_alert=False)      
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_predict'))
+def callback_random_img_predict(call):
+    np_img = bot.get_captured_data(call.message.chat.id)
+    if np_img is not None:
+      ae_res = ae.predict_img(np_img/255.)
+      photo = TelebotWrapper.to_photo(ae_res)
+      bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
+                             media=InputMediaPhoto(photo), reply_markup=random_img_restore_keybord())
+      bot.answer_callback_query(callback_query_id=call.id, show_alert=False)
+      
+    
+@bot.message_handler(func=commands_handler(['/random_img']))
+def command_random_img(message):
+    bot.capture_data_random_img(message.chat.id)
+    np_img = bot.get_captured_data(message.chat.id)
+    if np_img is not None:
+      photo = TelebotWrapper.to_photo(np_img)
+      bot.send_photo(message.chat.id, photo, reply_to_message_id=message.message_id,
+                     reply_markup=random_img_predict_keybord())
+    else:
+      bot.send_message(message.chat.id, MsgTemplate.random_img_respond(success=False))  
+      
+      
+################ Capturing random image from dataset  ######################        
+    
+def add_happiness(call):
+  message = call.message  
+  file_id = call.message.photo[-1].file_id
+  file_info = bot.get_file(file_id)
+  #img = bot.download_file(file_info.file_path)  
+  with open('image.jpg', 'rb') as img:
+    bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
+                           media=InputMediaPhoto(img), reply_markup=captured_img_keybord())
+    bot.answer_callback_query(callback_query_id=call.id, show_alert=False)
+  
+    
+@bot.callback_query_handler(func=lambda call: call.data.startswith('add_happiness'))
 def callback_in_office(call):
-    heheh(call)
+    add_happiness(call)
     
 @bot.message_handler(func=commands_handler(['/captured_img']))
 def command_start(message):
-    text = 'you are my best friend'
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(Button(text='⬅️', callback_data='heheh'),
-                 Button(text='➡️➡️➡️', callback_data='ahaha'),)
-    bot.reply_to(message, text, reply_markup=keyboard, parse_mode='HTML')
+    np_img = bot.get_captured_data(message.chat.id)    
+    if np_img is not None:
+      img = TelebotWrapper.to_photo(np_img)
+      bot.send_photo(message.chat.id, img, reply_to_message_id=message.message_id, reply_markup=captured_img_keybord())
 
 # add capture image command
     
