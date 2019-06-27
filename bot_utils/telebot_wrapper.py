@@ -64,15 +64,24 @@ class TelebotWrapper(telebot.TeleBot):
       
     def capture_data_emotional_img(self, user_id, img):
       self.emotional_data_dict[user_id] = img
-      
-    def get_captured_data(self, user_id):
+
+    def get_captured_data_normal_code(self, user_id):
       if (user_id not in self.captured_data_dict) or (user_id not in self.emotional_data_dict):
         return None, None
-      val, emotional_val = self.captured_data_dict[user_id], self.emotional_data_dict[user_id]
-      # TODO: search how to refactor this
-      if val[0] is not None:
-        return val[0], emotional_val
-      elif val[1] is not None:
-        return val[1], emotional_val
-      else:
-        return val[2], emotional_val
+      val, emotional_val = self.captured_data_dict[user_id], self.emotional_data_dict[user_id] 
+      return 
+      
+    def get_captured_data_random_img(self, user_id):
+      if (user_id not in self.captured_data_dict) or (user_id not in self.emotional_data_dict):
+        return None, None
+      return self.captured_data_dict[user_id][0], self.emotional_data_dict[user_id]
+
+    def get_captured_data_normal_code(self, user_id):
+      if (user_id not in self.captured_data_dict) or (user_id not in self.emotional_data_dict):
+        return None, None
+      return self.captured_data_dict[user_id][1], self.emotional_data_dict[user_id]
+
+    def get_captured_data_user_img(self, user_id):
+      if (user_id not in self.captured_data_dict) or (user_id not in self.emotional_data_dict):
+        return None, None
+      return self.captured_data_dict[user_id][2], self.emotional_data_dict[user_id]        

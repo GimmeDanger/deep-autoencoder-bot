@@ -58,7 +58,7 @@ def random_img_modify_keybord():
 def callback_random_img_dice(call):
     bot.capture_data_emotional_img(call.message.chat.id, None)
     bot.capture_data_random_img(call.message.chat.id)
-    np_img, _ = bot.get_captured_data(call.message.chat.id)
+    np_img, _ = bot.get_captured_data_random_img(call.message.chat.id)
     if np_img is not None:
       photo = TelebotWrapper.to_photo(np_img)
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
@@ -68,7 +68,7 @@ def callback_random_img_dice(call):
 @bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_restore'))
 def callback_random_img_predict(call):
     bot.capture_data_emotional_img(call.message.chat.id, None)
-    np_img, _ = bot.get_captured_data(call.message.chat.id)
+    np_img, _ = bot.get_captured_data_random_img(call.message.chat.id)
     if np_img is not None:
       photo = TelebotWrapper.to_photo(np_img)
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
@@ -77,7 +77,7 @@ def callback_random_img_predict(call):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_predict'))
 def callback_random_img_predict(call):
-    np_img, _ = bot.get_captured_data(call.message.chat.id)
+    np_img, _ = bot.get_captured_data_random_img(call.message.chat.id)
     if np_img is not None:
       ae_res = ae.predict_img(np_img)
       photo = TelebotWrapper.to_photo(ae_res)
@@ -88,7 +88,7 @@ def callback_random_img_predict(call):
 # inverse=False for 'add_happiness
 # inverse=True for 'sub_happiness
 def add_random_img_happiness_wrapper(call, inverse=False):
-    np_img, np_emotional_img = bot.get_captured_data(call.message.chat.id)
+    np_img, np_emotional_img = bot.get_captured_data_random_img(call.message.chat.id)
     if np_img is not None:
       if np_emotional_img is None:
         np_emotional_img = np_img
@@ -114,7 +114,7 @@ def callback_random_img_add_happiness(call):
 @bot.message_handler(func=commands_handler(['/random_img']))
 def command_random_img(message):
     bot.capture_data_random_img(message.chat.id)
-    np_img, _ = bot.get_captured_data(message.chat.id)
+    np_img, _ = bot.get_captured_data_random_img(message.chat.id)
     if np_img is not None:
       photo = TelebotWrapper.to_photo(np_img)
       bot.send_photo(message.chat.id, photo, reply_to_message_id=message.message_id,
@@ -138,7 +138,7 @@ def callback_normal_code_dice(call):
     mu, sigma = np.random.uniform(0., 10., 1), np.random.uniform(0., 20., 1)
     normal_code = np.random.normal(mu, sigma, ae.code_size) 
     bot.capture_data_normal_code(call.message.chat.id, normal_code)    
-    np_img, _ = bot.get_captured_data(call.message.chat.id)
+    np_img, _ = bot.get_captured_data_normal_code(call.message.chat.id)
     if np_img is not None:
       res = ae._predict_code_reconstruction(np_img)      
       photo = TelebotWrapper.to_photo(res)
@@ -150,7 +150,7 @@ def callback_normal_code_dice(call):
 # inverse=False for 'add_happiness
 # inverse=True for 'sub_happiness
 def add_normal_code_img_happiness_wrapper(call, inverse=False):
-    np_code, np_emotional_code = bot.get_captured_data(call.message.chat.id)
+    np_code, np_emotional_code = bot.get_captured_data_normal_code(call.message.chat.id)
     if np_code is not None:
       if np_emotional_code is None:
         np_emotional_code = np_code
@@ -203,7 +203,7 @@ def command_random_img(message):
     
 @bot.message_handler(func=commands_handler(['/captured_img']))
 def command_start(message):
-    np_img, _ = bot.get_captured_data(message.chat.id)    
+    np_img, _ = bot.get_captured_data_user_img(message.chat.id)    
     if np_img is not None:
       img = TelebotWrapper.to_photo(np_img)
       bot.send_photo(message.chat.id, img, reply_to_message_id=message.message_id, reply_markup=captured_img_keybord())
