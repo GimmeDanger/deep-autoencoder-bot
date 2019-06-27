@@ -30,7 +30,7 @@ class MsgTemplate():
     @staticmethod
     def get_photo_respond(sucess=True):
         if sucess:
-            return "Отличино! \nВаше фото теперь в /captured_usr_img"
+            return "Отличино! \nВаше фото теперь в \n/captured_usr_img"
         else:
             return "Oooops! Попробуй другое фото"
 

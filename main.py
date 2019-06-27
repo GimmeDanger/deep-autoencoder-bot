@@ -50,7 +50,7 @@ def random_img_predict_keyboard():
 def random_img_modify_keyboard():
   keyboard = InlineKeyboardMarkup()
   keyboard.add(Button(text='😁', callback_data='random_img_add_happiness'),               
-               Button(text='🤦(back)', callback_data='random_img_restore'),
+               Button(text='🤦', callback_data='random_img_restore'),
                Button(text='😒', callback_data='random_img_sub_happiness'),)
   return keyboard
 
@@ -196,7 +196,7 @@ def command_normal_code_img(message):
                      reply_to_message_id=message.message_id, reply_markup=normal_code_modify_keyboard())
     else:
         ans = "Использование: /normal_code_img [µ] [σ], где µ, σ - параметры нормального \
-               распределения в диапазоне 0 до 255. Если любите классику, то используйте (µ, σ) = (0, 1)."
+               распределения в диапазоне 0 до 255. Если любите классику, то используйте /normal_code_img_0_1"
         bot.reply_to(message, ans)
 
 @bot.message_handler(func=commands_handler(['/normal_code_img_0_1']))
