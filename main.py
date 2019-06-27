@@ -195,7 +195,7 @@ def command_random_img(message):
       bot.send_photo(message.chat.id, photo, caption=f'(µ, σ) = ({mu:.3f}, {sigma:.3f})',
                      reply_to_message_id=message.message_id, reply_markup=normal_code_modify_keybord())
     else:
-        ans = "Использование: /normal_code_img µ σ, где µ, σ - параметры нормального \
+        ans = "Использование: /normal_code_img [µ] [σ], где µ, σ - параметры нормального \
                распределения в диапазоне 0 до 255. Если любите классику, то используйте (µ, σ) = (0, 1)."
         bot.reply_to(message, ans)
 
