@@ -5,16 +5,12 @@ import requests
 import random
 import re
 
-from itertools import cycle
-
 import tokens
-
 import telebot
-from telebot import apihelper
+from bot_utils import TelebotWrapper
 from telebot.types import InlineKeyboardButton as Button, InlineKeyboardMarkup
-from telebot.apihelper import ApiException, _get_req_session
 
-bot = telebot.TeleBot(tokens.bot, threaded=False)
+bot = TelebotWrapper(tokens.bot, threaded=False)
 
 def commands_handler(cmnds):
     def wrapped(message):
@@ -23,12 +19,15 @@ def commands_handler(cmnds):
         split_message = re.split(r'[^\w@/]', message.text.lower())
         s = split_message[0]
         return (s in cmnds) or (s.split('@')[0] in cmnds)
-
     return wrapped
 
+@bot.message_handler(func=commands_handler(['/start']))
+def command_start(message):
+    msg = "Привет! Перед вами бот"
+    bot.send_message(message.chat.id, msg)
     
 @bot.message_handler(func=commands_handler(['/help']))
-def command_start(message):
+def command_help(message):
     msg = "help text"
     bot.send_message(message.chat.id, msg)  
     
@@ -81,43 +80,22 @@ def photo(message):
 @bot.message_handler(content_types=["text"])
 def repeat_all_messages(message):
     msg = "Send a photo or press /help"
-    bot.send_message(message.chat.id, msg)        
-    
+    bot.send_message(message.chat.id, msg)
+
 if __name__ == '__main__':
-  
-    bot.skip_pending = False
-    
-    # Free Telegram proxies from t.me/proxyme and others
-    proxies_list = [
-        '',
-        'socks5://telegram:telegram@sr123.spry.fail:1080',
-        'socks5://telegram:telegram@sreju5h4.spry.fail:1080',
-        'socks5://28006241:F1zcUqql@deimos.public.opennetwork.cc:1090',
-        'socks5://telegram:telegram@rmpufgh1.teletype.live:1080',
-        'socks5://28006241:F1zcUqql@phobos.public.opennetwork.cc:1090',        
-    ]
-    #random.shuffle(proxies_list)
-    curr_proxy = cycle(proxies_list)
-    
-    apihelper.CONNECT_TIMEOUT = 2.5    
-    _get_req_session(reset=True)
-        
-    while True:       
+    while True:
         try:
-            apihelper.proxy = {'https': next(curr_proxy)}
+            bot.set_proxy()
             bot.polling(none_stop=True)
-            
+
         except requests.exceptions.ReadTimeout as e:
             print('Read Timeout. Reconnecting in 5 seconds.')
             time.sleep(5)
-            #sys.exit(0)
-            
 
-        except requests.exceptions.ConnectionError as e:	  
+        except requests.exceptions.ConnectionError as e:
             print('Connection Error. Reconnecting...')
-            print(e)
             time.sleep(1)
 
         except KeyboardInterrupt as e:
-            print('Keyboard Interrupt. Good bye.')          
+            print('Keyboard Interrupt. Good bye.')
             sys.exit(0)
