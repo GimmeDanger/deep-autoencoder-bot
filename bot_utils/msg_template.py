@@ -1,5 +1,3 @@
-with open(config.FileLocation.cmd_help, 'r', encoding='utf-8') as file:
-
 class MsgTemplate():
     @staticmethod
     def start_respond():
