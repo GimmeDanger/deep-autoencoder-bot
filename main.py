@@ -14,9 +14,9 @@ from telebot.types import InlineKeyboardButton as Button, InlineKeyboardMarkup, 
 
 
 bot = TelebotWrapper(tokens.bot, threaded=False)
-ae = Autoencoder(load_pretrained_weights=True,
-                 encoder_weights_path='autoencoder/model_weights/encoder_weights.txt',
-                 decoder_weights_path='autoencoder/model_weights/decoder_weights.txt')
+ae = Autoencoder(encoder_weights_path='autoencoder/model_weights/encoder_weights.txt',
+                 decoder_weights_path='autoencoder/model_weights/decoder_weights.txt',
+                 happiness_code_path='autoencoder/model_weights/happiness_code_90.npy')
 
 def commands_handler(cmnds):
     def wrapped(message):
@@ -45,16 +45,17 @@ def random_img_predict_keybord():
                Button(text='🎲', callback_data='random_img_dice'),)
   return keyboard
 
-def random_img_restore_keybord():
+def random_img_modify_keybord():
   keyboard = InlineKeyboardMarkup()
-  keyboard.add(Button(text='🤦', callback_data='random_img_restore'),
-               Button(text='🎲', callback_data='random_img_dice'),)
+  keyboard.add(Button(text='😁', callback_data='add_happiness'),               
+               Button(text='🤦', callback_data='random_img_restore'),
+               Button(text='😒', callback_data='sum_happiness'),)
   return keyboard
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_dice'))
 def callback_random_img_dice(call):
     bot.capture_data_random_img(call.message.chat.id)
-    np_img = bot.get_captured_data(call.message.chat.id)
+    np_img, _ = bot.get_captured_data(call.message.chat.id)
     if np_img is not None:
       photo = TelebotWrapper.to_photo(np_img)
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
@@ -63,7 +64,7 @@ def callback_random_img_dice(call):
       
 @bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_restore'))
 def callback_random_img_predict(call):
-    np_img = bot.get_captured_data(call.message.chat.id)
+    np_img, _ = bot.get_captured_data(call.message.chat.id)
     if np_img is not None:
       photo = TelebotWrapper.to_photo(np_img)
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
@@ -72,19 +73,19 @@ def callback_random_img_predict(call):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_predict'))
 def callback_random_img_predict(call):
-    np_img = bot.get_captured_data(call.message.chat.id)
+    np_img, _ = bot.get_captured_data(call.message.chat.id)
     if np_img is not None:
-      ae_res = ae.predict_img(np_img/255.)
+      ae_res = ae.predict_img(np_img)
       photo = TelebotWrapper.to_photo(ae_res)
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
-                             media=InputMediaPhoto(photo), reply_markup=random_img_restore_keybord())
+                             media=InputMediaPhoto(photo), reply_markup=random_img_modify_keybord())
       bot.answer_callback_query(callback_query_id=call.id, show_alert=False)
       
     
 @bot.message_handler(func=commands_handler(['/random_img']))
 def command_random_img(message):
     bot.capture_data_random_img(message.chat.id)
-    np_img = bot.get_captured_data(message.chat.id)
+    np_img, _ = bot.get_captured_data(message.chat.id)
     if np_img is not None:
       photo = TelebotWrapper.to_photo(np_img)
       bot.send_photo(message.chat.id, photo, reply_to_message_id=message.message_id,
@@ -112,14 +113,13 @@ def callback_in_office(call):
     
 @bot.message_handler(func=commands_handler(['/captured_img']))
 def command_start(message):
-    np_img = bot.get_captured_data(message.chat.id)    
+    np_img, _ = bot.get_captured_data(message.chat.id)    
     if np_img is not None:
       img = TelebotWrapper.to_photo(np_img)
       bot.send_photo(message.chat.id, img, reply_to_message_id=message.message_id, reply_markup=captured_img_keybord())
 
 # add capture image command
     
-#@bot.message_handler(commands=['randompepe'])    
 @bot.message_handler(content_types=['photo'])
 def photo(message):
     print('message.photo =', message.photo)

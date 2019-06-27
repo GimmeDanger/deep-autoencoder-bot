@@ -11,9 +11,11 @@ class TelebotWrapper(telebot.TeleBot):
     # tracking user data
     # (user id : {random_img, (mu_code, sigma_var), user_img}
     captured_data_dict = dict()
+    # (user id : {emotional_img}
+    emotional_data_dict = dict()
     
     # preloaded resized dataset for examples
-    dataset = np.load("autoencoder/lfw_dataset/data_90.npy")
+    dataset = np.load("autoencoder/lfw_dataset/data_90.npy").astype('float32') / 255.
 
     # proxy switching list,
     # thanks to https://github.com/uburuntu
@@ -50,21 +52,24 @@ class TelebotWrapper(telebot.TeleBot):
     def capture_data_random_img(self, user_id):
       rand_i = randint(0, len(self.dataset)-1)
       self.captured_data_dict[user_id] = (self.dataset[rand_i], None, None)
+      self.emotional_data_dict[user_id] = None
       
     def capture_data_normal_code(self, user_id, mu, sigma):
       self.captured_data_dict[user_id] = (None, (mu, sigma), None)
+      self.emotional_data_dict[user_id] = None
       
     def capture_data_user_img(self, user_id, img):
       self.captured_data_dict[user_id] = (None, None, img)
+      self.emotional_data_dict[user_id] = None
       
     def get_captured_data(self, user_id):
-      if user_id not in self.captured_data_dict:
-        return None
-      val = self.captured_data_dict[user_id]
+      if (user_id not in self.captured_data_dict) or (user_id not in self.emotional_data_dict):
+        return None, None
+      val, emotional_val = self.captured_data_dict[user_id], self.emotional_data_dict[user_id]
       # TODO: search how to refactor this
       if val[0] is not None:
-        return val[0]
+        return val[0], emotional_val
       elif val[1] is not None:
-        return val[1]
+        return val[1], emotional_val
       else:
-        return val[2]
+        return val[2], emotional_val

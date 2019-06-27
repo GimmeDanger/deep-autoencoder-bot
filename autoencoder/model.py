@@ -6,16 +6,16 @@ from keras.layers import Input, InputLayer, Dense, BatchNormalization, Dropout, 
 
 
 class Autoencoder:
-    def __init__(self, img_shape=(90, 90, 3), code_size=128, hidden_size=512, load_pretrained_weights=False,
-                 encoder_weights_path = 'model_weights/encoder_weights.txt',
-                 decoder_weights_path = 'model_weights/decoder_weights.txt'):
+    def __init__(self, img_shape=(90, 90, 3), code_size=128, hidden_size=512,
+                 encoder_weights_path = None, decoder_weights_path = None,
+                 happiness_code_path = None):
         # Basic input parameters
         self.img_shape = img_shape
         self.code_size = code_size
         self.hidden_size = hidden_size
         self.encoder_weights_path = encoder_weights_path
         self.decoder_weights_path = decoder_weights_path
-        self.load_pretrained_weights = load_pretrained_weights
+        self.happiness_code_path = happiness_code_path
 
         # Compile model
         self.encoder, self.decoder = self.build_autoencoder(img_shape, code_size, hidden_size)
@@ -25,9 +25,13 @@ class Autoencoder:
         self.autoencoder = Model(inputs=inp, outputs=reconstruction)
         self.autoencoder.compile(optimizer=Adam(lr=0.0001), loss='binary_crossentropy')
 
-        # Load weights if needed
-        if load_pretrained_weights:
-            self.load_weights(self.encoder_weights_path, self.decoder_weights_path)
+        # Load weights and happiness code if needed
+        if self.encoder_weights_path is not None and self.decoder_weights_path is not None:
+            # load weights
+            self.load_weights(self.encoder_weights_path, self.decoder_weights_path)            
+            if self.happiness_code_path is not None:
+              self.happiness_code = np.load(self.happiness_code_path)
+              
 
     # \brief Fit method wrapper
     # Note that y_train == x_train, y_val == x_val, because this is unsupervised learning model
@@ -109,27 +113,3 @@ class Autoencoder:
         decoder.add(Dense(img_shape[0] * img_shape[1] * img_shape[2], activation='sigmoid'))
         decoder.add(Reshape(img_shape))
         return encoder, decoder
-
-
-'''
-# test
-import matplotlib.pyplot as plt
-import warnings
-warnings.filterwarnings('ignore')
-
-def reconstruct_image(x,dims=(90,90,3)):
-    img = x.reshape(*dims)*255.0
-    #img = (img - np.min(img)) / (np.max(img) - np.min(img))
-    return img
-
-ae = Autoencoder()
-ae.load_weights()
-data = np.load('lfw_dataset/data_90.npy')
-img = reconstruct_image(ae.predict_img(data[0]/255.))
-
-from skimage.io import imsave
-imsave('clean_img.jpg', data[0])
-imsave('mod_img.jpg', img)
-  
-print("finished!")  
-'''
