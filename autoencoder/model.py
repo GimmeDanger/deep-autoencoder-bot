@@ -83,7 +83,7 @@ class Autoencoder:
       
     # \brief Add happiness wrapper
     def add_happiness(self, raw_img, inverse=False):
-        formatted_img = self.prepare_photo_before_feeding(raw_jpg)
+        formatted_img = self.prepare_photo_before_feeding(raw_img)
         reconstr_img = self._add_happiness(formatted_img, inverse)
         return reconstr_img
 
