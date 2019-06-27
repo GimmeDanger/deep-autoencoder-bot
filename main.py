@@ -135,7 +135,7 @@ def normal_code_modify_keybord():
 @bot.callback_query_handler(func=lambda call: call.data.startswith('normal_code_dice'))
 def callback_normal_code_dice(call):
     bot.capture_data_emotional_img(call.message.chat.id, None)
-    mu, sigma = np.random.uniform(0., 10., 1), np.random.uniform(0., 20., 1)
+    mu, sigma = np.random.uniform(0., 5., 1), np.random.uniform(0., 16., 1)
     normal_code = np.random.normal(mu, sigma, ae.code_size) 
     bot.capture_data_normal_code(call.message.chat.id, normal_code)    
     np_img, _ = bot.get_captured_data_normal_code(call.message.chat.id)
@@ -192,7 +192,7 @@ def command_random_img(message):
       bot.capture_data_normal_code(message.chat.id, normal_code)
       res = ae._predict_code_reconstruction(normal_code)      
       photo = TelebotWrapper.to_photo(res)
-      bot.send_photo(message.chat.id, photo, caption=f'(µ, σ) = ({mu}, {sigma})', 
+      bot.send_photo(message.chat.id, photo, caption=f'(µ, σ) = ({mu:.3f}, {sigma:.3f})',
                      reply_to_message_id=message.message_id, reply_markup=normal_code_modify_keybord())
     else:
         ans = "Использование: /normal_code_img µ σ, где µ, σ - параметры нормального \
