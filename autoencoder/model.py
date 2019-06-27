@@ -6,14 +6,15 @@ from keras.layers import Input, InputLayer, Dense, BatchNormalization, Dropout, 
 
 
 class Autoencoder:
-    def __init__(self, img_shape=(90, 90, 3), code_size=128, hidden_size=512, load_default_pretrained_weights=False):
+    def __init__(self, img_shape=(90, 90, 3), code_size=128, hidden_size=512, load_pretrained_weights=False,
+                 encoder_weights_path = 'model_weights/encoder_weights.txt',
+                 decoder_weights_path = 'model_weights/decoder_weights.txt'):
         # Basic input parameters
         self.img_shape = img_shape
         self.code_size = code_size
         self.hidden_size = hidden_size
-        self.default_weights_folder = "model_weights"
-        self.default_encoder_weights_path = f"{self.default_weights_folder}/encoder_weights.txt"
-        self.default_decoder_weights_path = f"{self.default_weights_folder}/decoder_weights.txt"
+        self.encoder_weights_path = encoder_weights_path
+        self.decoder_weights_path = decoder_weights_path
         self.load_pretrained_weights = load_pretrained_weights
 
         # Compile model
@@ -25,8 +26,8 @@ class Autoencoder:
         self.autoencoder.compile(optimizer=Adam(lr=0.0001), loss='binary_crossentropy')
 
         # Load weights if needed
-        if load_default_pretrained_weights:
-            self.load_weights(self.default_encoder_weights_path, self.default_decoder_weights_path)
+        if load_pretrained_weights:
+            self.load_weights(self.encoder_weights_path, self.decoder_weights_path)
 
     # \brief Fit method wrapper
     # Note that y_train == x_train, y_val == x_val, because this is unsupervised learning model
@@ -57,22 +58,19 @@ class Autoencoder:
         return self.decoder.predict(code[None])[0]
 
     # \brief Load pretrained model weights
-    def load_weights(self, encoder_weights_path=None, decoder_weights_path=None):
-        if encoder_weights_path is None:
-            encoder_weights_path = self.default_encoder_weights_path
-        if decoder_weights_path is None:
-            decoder_weights_path = self.default_decoder_weights_path
+    def load_weights(self, encoder_weights_path, decoder_weights_path):
         self.encoder.load_weights(encoder_weights_path)
         self.decoder.load_weights(decoder_weights_path)
 
     # \brief Photo must suit the input format of network
     def prepare_photo_before_feeding(self, raw_jpg):
         dx, dy = self.img_shape[0], self.img_shape[1]
-        dimx, dimy = 3 * dx, 3 * dy
+        img = resize(raw_jpg, [dx, dy], mode='reflect', anti_aliasing=True)        
         # this method automatically normalizes by 255.
-        img = resize(raw_jpg, [dimx, dimy], mode='reflect', anti_aliasing=True)
+        # dimx, dimy = 3 * dx, 3 * dy
+        #img = resize(raw_jpg, [dimx, dimy], mode='reflect', anti_aliasing=True)
         # crop the center part
-        img = img[dy:-dy, dx:-dx]
+        #img = img[dy:-dy, dx:-dx]
         # convert to float32, maybe redundant
         img = img.astype('float32')
         return img
@@ -80,14 +78,14 @@ class Autoencoder:
     # \brief Restore photo format for correct plotting
     def restore_photo_format(self, reconstructed_photo):
         img = reconstructed_photo.reshape(*self.img_shape)
-        img = (img - np.min(img)) / (np.max(img) - np.min(img))
-        return img
+        img = (img - np.min(img)) / (np.max(img) - np.min(img))        
+        return Image.fromarray(img)
 
     # \brief Feed network with raw_jpg
     def feed_photo(self, raw_jpg):
         formatted_img = self.prepare_photo_before_feeding(raw_jpg)
         reconstr_img = self.predict_img(formatted_img)
-        return self.restore_photo_format(reconstr_img)
+        return formatted_img, reconstr_img
 
     # \brief Deep autoencoder network construction
     # \return encoder -- encoding part, which compress image to the code

@@ -4,6 +4,7 @@ import requests
 import re
 
 from autoencoder.model import Autoencoder
+from skimage.io import imread, imsave
 
 import tokens
 import telebot
@@ -13,7 +14,9 @@ from telebot.types import InlineKeyboardButton as Button, InlineKeyboardMarkup
 
 
 bot = TelebotWrapper(tokens.bot, threaded=False)
-ae = Autoencoder(load_default_pretrained_weights=True)
+ae = Autoencoder(load_pretrained_weights=True,
+                 encoder_weights_path = 'autoencoder/model_weights/encoder_weights.txt',
+                 decoder_weights_path = 'autoencoder/model_weights/decoder_weights.txt')
 
 def commands_handler(cmnds):
     def wrapped(message):
@@ -72,11 +75,17 @@ def photo(message):
       bot.send_message(message.chat.id, MsgTemplate.get_photo_respond(sucess=True))
 
       #test
-      ae_res = ae.feed_photo(downloaded_file)
-      bot.send_photo(message.chat.id, ae_res)
+      user_img = imread("image.jpg")  
+      ae_format, ae_res = ae.feed_photo(user_img)
+      imsave('formatted_image.jpg', ae_format)
+      imsave('reconstr_image.jpg', ae_res)
+      send_formated_img = open('formatted_image.jpg', 'rb')
+      send_res_img = open('reconstr_image.jpg', 'rb')
+      bot.send_photo(message.chat.id, send_formated_img)
+      bot.send_photo(message.chat.id, send_res_img)
       
     except:
-      bot.send_message(message.chat.id, MsgTemplate.get_photo_respond(sucess=False))
+      bot.send_message(message.chat.id, MsgTemplate.get_photo_respond(sucess=False))        
 
 
 @bot.message_handler(content_types=["text"])
