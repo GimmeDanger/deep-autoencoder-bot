@@ -200,49 +200,108 @@ def command_random_img(message):
         bot.reply_to(message, ans)
 
 #################### Capturing user image  #########################
-    
-@bot.message_handler(func=commands_handler(['/captured_img']))
-def command_start(message):
-    np_img, _ = bot.get_captured_data_user_img(message.chat.id)    
-    if np_img is not None:
-      img = TelebotWrapper.to_photo(np_img)
-      bot.send_photo(message.chat.id, img, reply_to_message_id=message.message_id, reply_markup=captured_img_keybord())
 
-# add capture image command
-    
 @bot.message_handler(content_types=['photo'])
-def photo(message):
-    print('message.photo =', message.photo)
-    fileID = message.photo[-1].file_id
-    print('fileID =', fileID)
-    file_info = bot.get_file(fileID)
-    print('file.file_path =', file_info.file_path)
+def photo(message):    
     try:
+      # Download sended photo
+      file_info = bot.get_file(message.photo[-1].file_id)
       downloaded_file = bot.download_file(file_info.file_path)
       with open("image.jpg", 'wb') as new_file:
-          new_file.write(downloaded_file)
-      
-      file= open('uvojenie.png','rb')
-      bot.send_photo(message.chat.id, file)
-      bot.send_message(message.chat.id, MsgTemplate.get_photo_respond(sucess=True))
-
-      #test
-      user_img = imread("image.jpg")  
-      ae_format, ae_res = ae.feed_photo(user_img)
-      imsave('formatted_image.jpg', ae_format)
-      imsave('reconstr_image.jpg', ae_res)
-      send_formated_img = open('formatted_image.jpg', 'rb')
-      send_res_img = open('reconstr_image.jpg', 'rb')
-      bot.send_photo(message.chat.id, send_formated_img)
-      bot.send_photo(message.chat.id, send_res_img)
+        new_file.write(downloaded_file)
+      user_img = imread("image.jpg")      
+            
+      # Save photo
+      bot.capture_data_user_img(message.chat.id, user_img)
+            
+      # send some respect      
+      bot.send_photo(message.chat.id, open('data/uvojenie.png','rb'))
+      bot.send_message(message.chat.id, MsgTemplate.get_photo_respond(sucess=True))      
       
     except:
-      bot.send_message(message.chat.id, MsgTemplate.get_photo_respond(sucess=False))        
+      bot.send_message(message.chat.id, MsgTemplate.get_photo_respond(sucess=False))
 
+
+def user_img_predict_keybord():
+  keyboard = InlineKeyboardMarkup()
+  keyboard.add(Button(text='🤖', callback_data='user_img_predict'),)
+  return keyboard
+
+def user_img_modify_keybord():
+  keyboard = InlineKeyboardMarkup()
+  keyboard.add(Button(text='😁', callback_data='user_img_add_happiness'),    
+               Button(text='🤦', callback_data='user_img_restore'),
+               Button(text='😒', callback_data='user_img_sub_happiness'),)
+  return keyboard  
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('user_img_restore'))
+def callback_user_img_predict(call):
+    bot.capture_data_emotional_img(call.message.chat.id, None)    
+    usr_img, _ = bot.get_captured_data_user_img(call.message.chat.id)
+    if np_img is not None:
+      ae_format, _ = ae.feed_photo(user_img)
+      photo = TelebotWrapper.to_photo(ae_format)
+      bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
+                             media=InputMediaPhoto(photo), reply_markup=user_img_predict_keybord())
+      bot.answer_callback_query(callback_query_id=call.id, show_alert=False)      
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_predict'))
+def callback_user_img_predict(call):
+    user_img, _ = bot.get_captured_data_user_img(call.message.chat.id)
+    if user_img is not None:
+      _, ae_res = ae.feed_photo(user_img)
+      photo = TelebotWrapper.to_photo(ae_res)
+      caption_txt = "Сеть немнооого переобучилась... Лучше попробуйте поиграть c /random_img или /normal_code_img. \
+                     Либо хорошо обрежьте изображение, чтобы больше напоминало примеры и /random_img."
+      bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
+                             media=InputMediaPhoto(photo, caption=caption_txt),
+                             reply_markup=user_img_modify_keybord())
+      bot.answer_callback_query(callback_query_id=call.id, show_alert=False)
+  
+# inverse=False for 'add_happiness
+# inverse=True for 'sub_happiness
+def add_user_img_happiness_wrapper(call, inverse=False):
+    usr_img, usr_emotional_img = bot.get_captured_data_user_img(call.message.chat.id)
+    if usr_img is not None:
+      if usr_emotional_img is None:
+        usr_emotional_img = usr_img
+      
+      # predict and save  
+      happy_img = ae.add_happiness(user_img, inverse)
+      emotional_img = TelebotWrapper.to_photo(happy_img)
+      bot.capture_data_emotional_img(call.message.chat.id, emotional_img)
+      
+      bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
+                             media=InputMediaPhoto(emotional_img), reply_markup=random_img_modify_keybord())
+      bot.answer_callback_query(callback_query_id=call.id, show_alert=False)  
+      
+@bot.callback_query_handler(func=lambda call: call.data.startswith('user_img_add_happiness'))
+def callback_user_img_add_happiness(call):
+    add_random_img_happiness_wrapper(call)
+      
+@bot.callback_query_handler(func=lambda call: call.data.startswith('user_img_sub_happiness'))
+def callback_user_img_sub_happiness(call):
+    add_random_img_happiness_wrapper(call, inverse=True)  
+    
+@bot.message_handler(func=commands_handler(['/captured_usr_img']))
+def command_captured_usr_img(message):
+    usr_img, _ = bot.get_captured_data_user_img(message.chat.id)    
+    if usr_img is not None:
+      ae_format, _ = ae.feed_photo(user_img)
+      photo = TelebotWrapper.to_photo(ae_format)
+      bot.send_photo(message.chat.id, photo, reply_to_message_id=message.message_id,
+                     reply_markup=user_img_modify_keybord())
+    else:
+      bot.send_message(message.chat.id, MsgTemplate.captured_usr_img(sucess=False))
+
+############# Other messages if no handler has been triggered  ##############
 
 @bot.message_handler(content_types=["text"])
 def other_messages(message):
     bot.send_message(message.chat.id, MsgTemplate.default_respond())
+
+
+######################### Main loop  ########################################
 
 
 if __name__ == '__main__':
