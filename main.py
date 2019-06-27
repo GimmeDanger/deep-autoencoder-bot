@@ -143,7 +143,7 @@ def callback_normal_code_dice(call):
       res = ae._predict_code_reconstruction(np_img)      
       photo = TelebotWrapper.to_photo(res)
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
-                             media=InputMediaPhoto(photo, caption=f'(µ, σ) = ({mu:.3f}, {sigma:.3f})',
+                             media=InputMediaPhoto(photo, caption=f'(µ, σ) = ({mu[0]:.3f}, {sigma[0]:.3f})'),
                              reply_markup=normal_code_modify_keyboard())
       bot.answer_callback_query(callback_query_id=call.id, show_alert=False)
       
