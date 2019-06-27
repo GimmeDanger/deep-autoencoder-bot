@@ -12,26 +12,22 @@ class MsgTemplate():
         if sucess:
             return ""
         else:
-            return "ooops! try again"
+            return "Oooops! Try again"
 
     @staticmethod
     def random_img_respond(sucess=True):
         if sucess:
             return ""
         else:
-            return "ooops! try again"        
-      
-    @staticmethod
-    def normal_code_respond():
-        return 'normal_code msg respond'  
+            return "Oooops! Try again"
 
     @staticmethod
     def get_photo_respond(sucess=True):
         if sucess:
-            return "thanks! now your photo is /captured_usr_img"
+            return "Thanks! \nYour photo is /captured_usr_img"
         else:
-            return "ooops! try another image"
+            return "Oooops! Try another image"
 
     @staticmethod
     def default_respond():
-        return 'Send a photo or press /help'
+        return 'Нажми /help для подробного описания функций бота'
