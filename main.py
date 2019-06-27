@@ -3,6 +3,8 @@ import sys
 import requests
 import re
 
+import numpy as np
+
 from autoencoder.model import Autoencoder
 from skimage.io import imread, imsave
 
@@ -47,9 +49,9 @@ def random_img_predict_keybord():
 
 def random_img_modify_keybord():
   keyboard = InlineKeyboardMarkup()
-  keyboard.add(Button(text='😁', callback_data='add_happiness'),               
+  keyboard.add(Button(text='😁', callback_data='random_img_add_happiness'),               
                Button(text='🤦', callback_data='random_img_restore'),
-               Button(text='😒', callback_data='sub_happiness'),)
+               Button(text='😒', callback_data='random_img_sub_happiness'),)
   return keyboard
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_dice'))
@@ -85,7 +87,7 @@ def callback_random_img_predict(call):
   
 # inverse=False for 'add_happiness
 # inverse=True for 'sub_happiness
-def add_happiness_wrapper(call, inverse=False):
+def add_random_img_happiness_wrapper(call, inverse=False):
     np_img, np_emotional_img = bot.get_captured_data(call.message.chat.id)
     if np_img is not None:
       if np_emotional_img is None:
@@ -100,13 +102,13 @@ def add_happiness_wrapper(call, inverse=False):
                              media=InputMediaPhoto(emotional_photo), reply_markup=random_img_modify_keybord())
       bot.answer_callback_query(callback_query_id=call.id, show_alert=False)  
       
-@bot.callback_query_handler(func=lambda call: call.data.startswith('add_happiness'))
-def callback_add_happiness(call):
-    add_happiness_wrapper(call)
+@bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_add_happiness'))
+def callback_random_img_add_happiness(call):
+    add_random_img_happiness_wrapper(call)
       
-@bot.callback_query_handler(func=lambda call: call.data.startswith('sub_happiness'))
-def callback_add_happiness(call):
-    add_happiness_wrapper(call, inverse=True)       
+@bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_sub_happiness'))
+def callback_random_img_add_happiness(call):
+    add_random_img_happiness_wrapper(call, inverse=True)       
       
     
 @bot.message_handler(func=commands_handler(['/random_img']))
@@ -121,22 +123,83 @@ def command_random_img(message):
       bot.send_message(message.chat.id, MsgTemplate.random_img_respond(success=False))  
       
       
-################ Capturing random image from dataset  ######################        
+################ Capturing normal code image  ######################        
+
+def normal_code_modify_keybord():
+  keyboard = InlineKeyboardMarkup()
+  keyboard.add(Button(text='😁', callback_data='normal_code_add_happiness'),    
+               Button(text='🎃', callback_data='normal_code_dice'),
+               Button(text='😒', callback_data='normal_code_sub_happiness'),)
+  return keyboard
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('normal_code_dice'))
+def callback_normal_code_dice(call):
+    bot.capture_data_emotional_img(call.message.chat.id, None)
+    mu, sigma = np.random.uniform(0., 10., 1), np.random.uniform(0., 20., 1)
+    normal_code = np.random.normal(mu, sigma, ae.code_size) 
+    bot.capture_data_normal_code(call.message.chat.id, normal_code)    
+    np_img, _ = bot.get_captured_data(call.message.chat.id)
+    if np_img is not None:
+      res = ae._predict_code_reconstruction(np_img)      
+      photo = TelebotWrapper.to_photo(res)
+      bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
+                             media=InputMediaPhoto(photo, caption=f'(µ, σ) = ({mu}, {sigma})'),
+                             reply_markup=normal_code_modify_keybord())
+      bot.answer_callback_query(callback_query_id=call.id, show_alert=False)
+      
+# inverse=False for 'add_happiness
+# inverse=True for 'sub_happiness
+def add_normal_code_img_happiness_wrapper(call, inverse=False):
+    np_code, np_emotional_code = bot.get_captured_data(call.message.chat.id)
+    if np_code is not None:
+      if np_emotional_code is None:
+        np_emotional_code = np_code
+        
+      # make the code happier, save it and reconstruct img
+      happy_img_code = ae._get_happy_img_code(np_emotional_code, inverse)      
+      bot.capture_data_emotional_img(call.message.chat.id, happy_img_code)
+      happy_img = ae.decoder.predict(happy_img_code[None])[0]
+      
+      emotional_photo = TelebotWrapper.to_photo(happy_img)      
+      bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
+                             media=InputMediaPhoto(emotional_photo), reply_markup=normal_code_modify_keybord())
+      bot.answer_callback_query(callback_query_id=call.id, show_alert=False)  
+      
+@bot.callback_query_handler(func=lambda call: call.data.startswith('normal_code_add_happiness'))
+def callback_normal_code_add_happiness(call):
+    add_normal_code_img_happiness_wrapper(call)
+      
+@bot.callback_query_handler(func=lambda call: call.data.startswith('normal_code_sub_happiness'))
+def callback_normal_code_add_happiness(call):
+    add_normal_code_img_happiness_wrapper(call, inverse=True)          
+
+@bot.message_handler(func=commands_handler(['/normal_code_img']))
+def command_random_img(message):    
+    def validate(s):
+      try:
+          s = float(s)
+          if s < 0. or s > 255.:
+            return False
+          return True
+      except ValueError:
+        return False
+      
+    split = message.text.split()
     
-def add_happiness(call):
-  message = call.message  
-  file_id = call.message.photo[-1].file_id
-  file_info = bot.get_file(file_id)
-  #img = bot.download_file(file_info.file_path)  
-  with open('image.jpg', 'rb') as img:
-    bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
-                           media=InputMediaPhoto(img), reply_markup=captured_img_keybord())
-    bot.answer_callback_query(callback_query_id=call.id, show_alert=False)
-  
-    
-@bot.callback_query_handler(func=lambda call: call.data.startswith('add_happiness'))
-def callback_in_office(call):
-    add_happiness(call)
+    if len(split) == 3 and validate(split[1]) and validate(split[2]):
+      mu, sigma = float(split[1]), float(split[2])          
+      normal_code = np.random.normal(mu, sigma, ae.code_size) 
+      bot.capture_data_normal_code(message.chat.id, normal_code)
+      res = ae._predict_code_reconstruction(normal_code)      
+      photo = TelebotWrapper.to_photo(res)
+      bot.send_photo(message.chat.id, photo, caption=f'(µ, σ) = ({mu}, {sigma})', 
+                     reply_to_message_id=message.message_id, reply_markup=normal_code_modify_keybord())
+    else:
+        ans = "Использование: /normal_code_img µ σ, где µ, σ - параметры нормального \
+               распределения в диапазоне 0 до 255. Если любите классику, то используйте (µ, σ) = (0, 1)."
+        bot.reply_to(message, ans)
+
+#################### Capturing user image  #########################
     
 @bot.message_handler(func=commands_handler(['/captured_img']))
 def command_start(message):

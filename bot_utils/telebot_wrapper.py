@@ -9,7 +9,7 @@ from skimage.io import imread, imsave
 class TelebotWrapper(telebot.TeleBot):
 
     # tracking user data
-    # (user id : {random_img, (mu_code, sigma_var), user_img}
+    # (user id : {random_img, normal_code, user_img}
     captured_data_dict = dict()
     # (user id : {emotional_img}
     emotional_data_dict = dict()
@@ -54,8 +54,8 @@ class TelebotWrapper(telebot.TeleBot):
       self.captured_data_dict[user_id] = (self.dataset[rand_i], None, None)
       self.emotional_data_dict[user_id] = None
       
-    def capture_data_normal_code(self, user_id, mu, sigma):
-      self.captured_data_dict[user_id] = (None, (mu, sigma), None)
+    def capture_data_normal_code(self, user_id, normal_code):
+      self.captured_data_dict[user_id] = (None, normal_code, None)
       self.emotional_data_dict[user_id] = None
       
     def capture_data_user_img(self, user_id, img):

@@ -57,7 +57,7 @@ class Autoencoder:
         return self.encoder.predict(img[None])[0]
 
     # \brief Single code reconstruction predict wrapper
-    def predict_code_reconstruction(self, code):
+    def _predict_code_reconstruction(self, code):
         # img[None] is the same as img[np.newaxis, :]
         return self.decoder.predict(code[None])[0]
 
@@ -66,13 +66,18 @@ class Autoencoder:
         self.encoder.load_weights(encoder_weights_path)
         self.decoder.load_weights(decoder_weights_path)
         
-    # \brief Add happiness to image    
-    def _add_happiness(self, img, inverse):
-        img_code = self.encoder.predict(img[None])[0]
+    # \brief Generate happy code from img code    
+    def _get_happy_img_code(self, img_code, inverse):
         if inverse:
           happy_img_code = img_code - self.happiness_code
         else:
           happy_img_code = img_code + self.happiness_code
+        return happy_img_code
+        
+    # \brief Add happiness to image    
+    def _add_happiness(self, img, inverse):
+        img_code = self.encoder.predict(img[None])[0]
+        happy_img_code = self._get_happy_img_code(img_code, inverse)
         happy_img = self.decoder.predict(happy_img_code[None])[0]
         return happy_img
       
