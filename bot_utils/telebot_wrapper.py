@@ -1,4 +1,5 @@
-from telebot import Telebot, apihelper
+import telebot
+from telebot import apihelper
 from itertools import cycle
 
 

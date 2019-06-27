@@ -7,7 +7,7 @@ import re
 
 import tokens
 import telebot
-from bot_utils import TelebotWrapper
+from bot_utils.telebot_wrapper import TelebotWrapper
 from telebot.types import InlineKeyboardButton as Button, InlineKeyboardMarkup
 
 bot = TelebotWrapper(tokens.bot, threaded=False)
