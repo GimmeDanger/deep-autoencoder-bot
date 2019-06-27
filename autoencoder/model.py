@@ -1,4 +1,5 @@
 import numpy as np
+from skimage.transform import resize
 from keras.optimizers import Adam
 from keras.models import Model, Sequential
 from keras.layers import Input, InputLayer, Dense, BatchNormalization, Dropout, Flatten, Reshape
@@ -63,6 +64,30 @@ class Autoencoder:
             decoder_weights_path = self.default_decoder_weights_path
         self.encoder.load_weights(encoder_weights_path)
         self.decoder.load_weights(decoder_weights_path)
+
+    # \brief Photo must suit the input format of network
+    def prepare_photo_before_feeding(self, raw_jpg):
+        dx, dy = self.img_shape[0], self.img_shape[1]
+        dimx, dimy = 3 * dx, 3 * dy
+        # this method automatically normalizes by 255.
+        img = resize(raw_jpg, [dimx, dimy], mode='reflect', anti_aliasing=True)
+        # crop the center part
+        img = img[dy:-dy, dx:-dx]
+        # convert to float32, maybe redundant
+        img = img.astype('float32')
+        return img
+
+    # \brief Restore photo format for correct plotting
+    def restore_photo_format(self, reconstructed_photo):
+        img = reconstructed_photo.reshape(*self.img_shape)
+        img = (img - np.min(img)) / (np.max(img) - np.min(img))
+        return img
+
+    # \brief Feed network with raw_jpg
+    def feed_photo(self, raw_jpg):
+        formatted_img = self.prepare_photo_before_feeding(raw_jpg)
+        reconstr_img = self.predict_img(formatted_img)
+        return self.restore_photo_format(reconstr_img)
 
     # \brief Deep autoencoder network construction
     # \return encoder -- encoding part, which compress image to the code

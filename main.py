@@ -68,8 +68,12 @@ def photo(message):
           new_file.write(downloaded_file)
       
       file= open('uvojenie.png','rb')
-      bot.send_photo(message.chat.id, file);
+      bot.send_photo(message.chat.id, file)
       bot.send_message(message.chat.id, MsgTemplate.get_photo_respond(sucess=True))
+
+      #test
+      ae_res = ae.feed_photo(downloaded_file)
+      bot.send_photo(message.chat.id, ae_res)
       
     except:
       bot.send_message(message.chat.id, MsgTemplate.get_photo_respond(sucess=False))
