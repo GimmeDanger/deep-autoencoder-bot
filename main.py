@@ -265,8 +265,9 @@ def add_user_img_happiness_wrapper(call, inverse=False):
     if user_img is not None:
       if user_emotional_img is None:
         user_emotional_img = user_img
-      # predict and save  
-      happy_img = ae.add_happiness(user_emotional_img, inverse)
+        happy_img = ae.add_happiness(user_emotional_img, inverse)
+      else:
+        happy_img = ae._add_happiness(user_emotional_img, inverse)
       emotional_img = TelebotWrapper.to_photo(happy_img)
       bot.capture_data_emotional_img(call.message.chat.id, emotional_img)
       
