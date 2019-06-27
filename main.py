@@ -31,11 +31,11 @@ def commands_handler(cmnds):
 
 @bot.message_handler(func=commands_handler(['/start']))
 def command_start(message):
-    bot.send_message(message.chat.id, MsgTemplate.start_respond())
+  bot.reply_to(message, MsgTemplate.start_respond(), parse_mode='HTML', disable_web_page_preview=True)
     
 @bot.message_handler(func=commands_handler(['/help']))
 def command_help(message):
-    bot.send_message(message.chat.id, MsgTemplate.help_respond())
+  bot.reply_to(message, MsgTemplate.help_respond(), parse_mode='HTML', disable_web_page_preview=True)
     
     
 ################ Capturing random image from dataset  ######################  
@@ -43,15 +43,15 @@ def command_help(message):
 
 def random_img_predict_keybord():
   keyboard = InlineKeyboardMarkup()
-  keyboard.add(Button(text='🤖', callback_data='random_img_predict'),
-               Button(text='🎲', callback_data='random_img_dice'),)
+  keyboard.add(Button(text='🤖(predict)', callback_data='random_img_predict'),
+               Button(text='🎲(dice)', callback_data='random_img_dice'),)
   return keyboard
 
 def random_img_modify_keybord():
   keyboard = InlineKeyboardMarkup()
-  keyboard.add(Button(text='😁', callback_data='random_img_add_happiness'),               
-               Button(text='🤦', callback_data='random_img_restore'),
-               Button(text='😒', callback_data='random_img_sub_happiness'),)
+  keyboard.add(Button(text='😁(add smile)', callback_data='random_img_add_happiness'),               
+               Button(text='🤦(back)', callback_data='random_img_restore'),
+               Button(text='😒(sub smile)', callback_data='random_img_sub_happiness'),)
   return keyboard
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_dice'))
