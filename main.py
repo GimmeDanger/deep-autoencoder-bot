@@ -238,8 +238,8 @@ def user_img_modify_keybord():
 def callback_user_img_predict(call):
     bot.capture_data_emotional_img(call.message.chat.id, None)    
     usr_img, _ = bot.get_captured_data_user_img(call.message.chat.id)
-    if np_img is not None:
-      ae_format, _ = ae.feed_photo(user_img)
+    if usr_img is not None:
+      ae_format, _ = ae.feed_photo(usr_img)
       photo = TelebotWrapper.to_photo(ae_format)
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
                              media=InputMediaPhoto(photo), reply_markup=user_img_predict_keybord())

@@ -21,7 +21,7 @@ class MsgTemplate():
     @staticmethod
     def get_photo_respond(sucess=True):
         if sucess:
-            return "thanks! now your photo is \captured"
+            return "thanks! now your photo is /captured_usr_img"
         else:
             return "ooops! try another image"
 
