@@ -8,11 +8,18 @@ class MsgTemplate():
         return 'help msg respond'
       
     @staticmethod
-    def random_img_respond(sucess=True):
+    def captured_usr_img(sucess=True):
         if sucess:
             return ""
         else:
             return "ooops! try again"
+
+    @staticmethod
+    def random_img_respond(sucess=True):
+        if sucess:
+            return ""
+        else:
+            return "ooops! try again"        
       
     @staticmethod
     def normal_code_respond():
