@@ -65,6 +65,22 @@ class Autoencoder:
     def load_weights(self, encoder_weights_path, decoder_weights_path):
         self.encoder.load_weights(encoder_weights_path)
         self.decoder.load_weights(decoder_weights_path)
+        
+    # \brief Add happiness to image    
+    def _add_happiness(self, img, inverse):
+        img_code = self.encoder.predict(img[None])[0]
+        if inverse:
+          happy_img_code = img_code - self.happiness_code
+        else:
+          happy_img_code = img_code + self.happiness_code
+        happy_img = self.decoder.predict(happy_img_code[None])[0]
+        return happy_img
+      
+    # \brief Add happiness wrapper
+    def add_happiness(self, raw_img, inverse=False):
+        formatted_img = self.prepare_photo_before_feeding(raw_jpg)
+        reconstr_img = self._add_happiness(formatted_img, inverse)
+        return reconstr_img
 
     # \brief Photo must suit the input format of network
     def prepare_photo_before_feeding(self, raw_jpg):

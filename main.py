@@ -49,11 +49,12 @@ def random_img_modify_keybord():
   keyboard = InlineKeyboardMarkup()
   keyboard.add(Button(text='😁', callback_data='add_happiness'),               
                Button(text='🤦', callback_data='random_img_restore'),
-               Button(text='😒', callback_data='sum_happiness'),)
+               Button(text='😒', callback_data='sub_happiness'),)
   return keyboard
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_dice'))
 def callback_random_img_dice(call):
+    bot.capture_data_emotional_img(call.message.chat.id, None)
     bot.capture_data_random_img(call.message.chat.id)
     np_img, _ = bot.get_captured_data(call.message.chat.id)
     if np_img is not None:
@@ -64,6 +65,7 @@ def callback_random_img_dice(call):
       
 @bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_restore'))
 def callback_random_img_predict(call):
+    bot.capture_data_emotional_img(call.message.chat.id, None)
     np_img, _ = bot.get_captured_data(call.message.chat.id)
     if np_img is not None:
       photo = TelebotWrapper.to_photo(np_img)
@@ -80,6 +82,31 @@ def callback_random_img_predict(call):
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
                              media=InputMediaPhoto(photo), reply_markup=random_img_modify_keybord())
       bot.answer_callback_query(callback_query_id=call.id, show_alert=False)
+  
+# inverse=False for 'add_happiness
+# inverse=True for 'sub_happiness
+def add_happiness_wrapper(call, inverse=False):
+    np_img, np_emotional_img = bot.get_captured_data(call.message.chat.id)
+    if np_img is not None:
+      if np_emotional_img is None:
+        np_emotional_img = np_img
+      
+      # predict and save  
+      res = ae._add_happiness(np_emotional_img, inverse)  
+      bot.capture_data_emotional_img(call.message.chat.id, res)
+      
+      emotional_photo = TelebotWrapper.to_photo(res)      
+      bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
+                             media=InputMediaPhoto(emotional_photo), reply_markup=random_img_modify_keybord())
+      bot.answer_callback_query(callback_query_id=call.id, show_alert=False)  
+      
+@bot.callback_query_handler(func=lambda call: call.data.startswith('add_happiness'))
+def callback_add_happiness(call):
+    add_happiness_wrapper(call)
+      
+@bot.callback_query_handler(func=lambda call: call.data.startswith('sub_happiness'))
+def callback_add_happiness(call):
+    add_happiness_wrapper(call, inverse=True)       
       
     
 @bot.message_handler(func=commands_handler(['/random_img']))

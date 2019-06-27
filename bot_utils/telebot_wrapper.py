@@ -62,6 +62,9 @@ class TelebotWrapper(telebot.TeleBot):
       self.captured_data_dict[user_id] = (None, None, img)
       self.emotional_data_dict[user_id] = None
       
+    def capture_data_emotional_img(self, user_id, img):
+      self.emotional_data_dict[user_id] = img
+      
     def get_captured_data(self, user_id):
       if (user_id not in self.captured_data_dict) or (user_id not in self.emotional_data_dict):
         return None, None
