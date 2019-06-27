@@ -245,7 +245,7 @@ def callback_user_img_predict(call):
                              media=InputMediaPhoto(photo), reply_markup=user_img_predict_keybord())
       bot.answer_callback_query(callback_query_id=call.id, show_alert=False)      
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_predict'))
+@bot.callback_query_handler(func=lambda call: call.data.startswith('user_img_predict'))
 def callback_user_img_predict(call):
     user_img, _ = bot.get_captured_data_user_img(call.message.chat.id)
     if user_img is not None:
@@ -264,24 +264,23 @@ def add_user_img_happiness_wrapper(call, inverse=False):
     usr_img, usr_emotional_img = bot.get_captured_data_user_img(call.message.chat.id)
     if usr_img is not None:
       if usr_emotional_img is None:
-        usr_emotional_img = usr_img
-      
+        usr_emotional_img = usr_img      
       # predict and save  
       happy_img = ae.add_happiness(user_img, inverse)
       emotional_img = TelebotWrapper.to_photo(happy_img)
       bot.capture_data_emotional_img(call.message.chat.id, emotional_img)
       
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
-                             media=InputMediaPhoto(emotional_img), reply_markup=random_img_modify_keybord())
+                             media=InputMediaPhoto(emotional_img), reply_markup=user_img_modify_keybord())
       bot.answer_callback_query(callback_query_id=call.id, show_alert=False)  
       
 @bot.callback_query_handler(func=lambda call: call.data.startswith('user_img_add_happiness'))
 def callback_user_img_add_happiness(call):
-    add_random_img_happiness_wrapper(call)
+    add_user_img_happiness_wrapper(call)
       
 @bot.callback_query_handler(func=lambda call: call.data.startswith('user_img_sub_happiness'))
 def callback_user_img_sub_happiness(call):
-    add_random_img_happiness_wrapper(call, inverse=True)  
+    add_user_img_happiness_wrapper(call, inverse=True)  
     
 @bot.message_handler(func=commands_handler(['/captured_usr_img']))
 def command_captured_usr_img(message):
@@ -290,7 +289,7 @@ def command_captured_usr_img(message):
       ae_format, _ = ae.feed_photo(user_img)
       photo = TelebotWrapper.to_photo(ae_format)
       bot.send_photo(message.chat.id, photo, reply_to_message_id=message.message_id,
-                     reply_markup=user_img_modify_keybord())
+                     reply_markup=user_img_predict_keybord())
     else:
       bot.send_message(message.chat.id, MsgTemplate.captured_usr_img(sucess=False))
 
