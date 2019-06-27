@@ -285,8 +285,8 @@ def callback_user_img_sub_happiness(call):
     
 @bot.message_handler(func=commands_handler(['/captured_usr_img']))
 def command_captured_usr_img(message):
-    usr_img, _ = bot.get_captured_data_user_img(message.chat.id)    
-    if usr_img is not None:
+    user_img, _ = bot.get_captured_data_user_img(message.chat.id)    
+    if user_img is not None:
       ae_format, _ = ae.feed_photo(user_img)
       photo = TelebotWrapper.to_photo(ae_format)
       bot.send_photo(message.chat.id, photo, reply_to_message_id=message.message_id,
