@@ -41,17 +41,17 @@ def command_help(message):
 ################ Capturing random image from dataset  ######################  
 
 
-def random_img_predict_keybord():
+def random_img_predict_keyboard():
   keyboard = InlineKeyboardMarkup()
   keyboard.add(Button(text='🤖(predict)', callback_data='random_img_predict'),
                Button(text='🎲(dice)', callback_data='random_img_dice'),)
   return keyboard
 
-def random_img_modify_keybord():
+def random_img_modify_keyboard():
   keyboard = InlineKeyboardMarkup()
-  keyboard.add(Button(text='😁(add smile)', callback_data='random_img_add_happiness'),               
+  keyboard.add(Button(text='😁', callback_data='random_img_add_happiness'),               
                Button(text='🤦(back)', callback_data='random_img_restore'),
-               Button(text='😒(sub smile)', callback_data='random_img_sub_happiness'),)
+               Button(text='😒', callback_data='random_img_sub_happiness'),)
   return keyboard
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_dice'))
@@ -62,7 +62,7 @@ def callback_random_img_dice(call):
     if np_img is not None:
       photo = TelebotWrapper.to_photo(np_img)
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
-                             media=InputMediaPhoto(photo), reply_markup=random_img_predict_keybord())
+                             media=InputMediaPhoto(photo), reply_markup=random_img_predict_keyboard())
       bot.answer_callback_query(callback_query_id=call.id, show_alert=False)
       
 @bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_restore'))
@@ -72,7 +72,7 @@ def callback_random_img_predict(call):
     if np_img is not None:
       photo = TelebotWrapper.to_photo(np_img)
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
-                             media=InputMediaPhoto(photo), reply_markup=random_img_predict_keybord())
+                             media=InputMediaPhoto(photo), reply_markup=random_img_predict_keyboard())
       bot.answer_callback_query(callback_query_id=call.id, show_alert=False)      
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_predict'))
@@ -82,7 +82,7 @@ def callback_random_img_predict(call):
       ae_res = ae.predict_img(np_img)
       photo = TelebotWrapper.to_photo(ae_res)
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
-                             media=InputMediaPhoto(photo), reply_markup=random_img_modify_keybord())
+                             media=InputMediaPhoto(photo), reply_markup=random_img_modify_keyboard())
       bot.answer_callback_query(callback_query_id=call.id, show_alert=False)
   
 # inverse=False for 'add_happiness
@@ -99,7 +99,7 @@ def add_random_img_happiness_wrapper(call, inverse=False):
       
       emotional_photo = TelebotWrapper.to_photo(res)      
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
-                             media=InputMediaPhoto(emotional_photo), reply_markup=random_img_modify_keybord())
+                             media=InputMediaPhoto(emotional_photo), reply_markup=random_img_modify_keyboard())
       bot.answer_callback_query(callback_query_id=call.id, show_alert=False)  
       
 @bot.callback_query_handler(func=lambda call: call.data.startswith('random_img_add_happiness'))
@@ -118,17 +118,17 @@ def command_random_img(message):
     if np_img is not None:
       photo = TelebotWrapper.to_photo(np_img)
       bot.send_photo(message.chat.id, photo, reply_to_message_id=message.message_id,
-                     reply_markup=random_img_predict_keybord())
+                     reply_markup=random_img_predict_keyboard())
     else:
       bot.send_message(message.chat.id, MsgTemplate.random_img_respond(success=False))  
       
       
 ################ Capturing normal code image  ######################        
 
-def normal_code_modify_keybord():
+def normal_code_modify_keyboard():
   keyboard = InlineKeyboardMarkup()
   keyboard.add(Button(text='😁', callback_data='normal_code_add_happiness'),    
-               Button(text='🎃', callback_data='normal_code_dice'),
+               Button(text='🎃(booo)', callback_data='normal_code_dice'),
                Button(text='😒', callback_data='normal_code_sub_happiness'),)
   return keyboard
 
@@ -143,8 +143,8 @@ def callback_normal_code_dice(call):
       res = ae._predict_code_reconstruction(np_img)      
       photo = TelebotWrapper.to_photo(res)
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
-                             media=InputMediaPhoto(photo, caption=f'(µ, σ) = ({mu}, {sigma})'),
-                             reply_markup=normal_code_modify_keybord())
+                             media=InputMediaPhoto(photo, caption=f'(µ, σ) = ({mu:.3f}, {sigma:.3f})'),
+                             reply_markup=normal_code_modify_keyboard())
       bot.answer_callback_query(callback_query_id=call.id, show_alert=False)
       
 # inverse=False for 'add_happiness
@@ -162,7 +162,7 @@ def add_normal_code_img_happiness_wrapper(call, inverse=False):
       
       emotional_photo = TelebotWrapper.to_photo(happy_img)      
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
-                             media=InputMediaPhoto(emotional_photo), reply_markup=normal_code_modify_keybord())
+                             media=InputMediaPhoto(emotional_photo), reply_markup=normal_code_modify_keyboard())
       bot.answer_callback_query(callback_query_id=call.id, show_alert=False)  
       
 @bot.callback_query_handler(func=lambda call: call.data.startswith('normal_code_add_happiness'))
@@ -174,7 +174,7 @@ def callback_normal_code_add_happiness(call):
     add_normal_code_img_happiness_wrapper(call, inverse=True)          
 
 @bot.message_handler(func=commands_handler(['/normal_code_img']))
-def command_random_img(message):    
+def command_normal_code_img(message):    
     def validate(s):
       try:
           s = float(s)
@@ -193,11 +193,21 @@ def command_random_img(message):
       res = ae._predict_code_reconstruction(normal_code)      
       photo = TelebotWrapper.to_photo(res)
       bot.send_photo(message.chat.id, photo, caption=f'(µ, σ) = ({mu:.3f}, {sigma:.3f})',
-                     reply_to_message_id=message.message_id, reply_markup=normal_code_modify_keybord())
+                     reply_to_message_id=message.message_id, reply_markup=normal_code_modify_keyboard())
     else:
         ans = "Использование: /normal_code_img [µ] [σ], где µ, σ - параметры нормального \
                распределения в диапазоне 0 до 255. Если любите классику, то используйте (µ, σ) = (0, 1)."
         bot.reply_to(message, ans)
+
+@bot.message_handler(func=commands_handler(['/normal_code_img_0_1']))
+def command_normal_code_img_0_1(message):    
+    mu, sigma = 0, 1      
+    normal_code = np.random.normal(mu, sigma, ae.code_size) 
+    bot.capture_data_normal_code(message.chat.id, normal_code)
+    res = ae._predict_code_reconstruction(normal_code)      
+    photo = TelebotWrapper.to_photo(res)
+    bot.send_photo(message.chat.id, photo, caption=f'(µ, σ) = ({mu:.3f}, {sigma:.3f})',
+                   reply_to_message_id=message.message_id, reply_markup=normal_code_modify_keyboard())
 
 #################### Capturing user image  #########################
 
@@ -222,12 +232,12 @@ def photo(message):
       bot.send_message(message.chat.id, MsgTemplate.get_photo_respond(sucess=False))
 
 
-def user_img_predict_keybord():
+def user_img_predict_keyboard():
   keyboard = InlineKeyboardMarkup()
-  keyboard.add(Button(text='🤖', callback_data='user_img_predict'),)
+  keyboard.add(Button(text='🤖(predict)', callback_data='user_img_predict'),)
   return keyboard
 
-def user_img_modify_keybord():
+def user_img_modify_keyboard():
   keyboard = InlineKeyboardMarkup()
   keyboard.add(Button(text='😁', callback_data='user_img_add_happiness'),    
                Button(text='🤦', callback_data='user_img_restore'),
@@ -242,7 +252,7 @@ def callback_user_img_predict(call):
       ae_format, _ = ae.feed_photo(usr_img)
       photo = TelebotWrapper.to_photo(ae_format)
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
-                             media=InputMediaPhoto(photo), reply_markup=user_img_predict_keybord())
+                             media=InputMediaPhoto(photo), reply_markup=user_img_predict_keyboard())
       bot.answer_callback_query(callback_query_id=call.id, show_alert=False)      
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('user_img_predict'))
@@ -255,7 +265,7 @@ def callback_user_img_predict(call):
                      Либо хорошо обрежьте изображение, чтобы больше напоминало примеры и /random_img."
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
                              media=InputMediaPhoto(photo, caption=caption_txt),
-                             reply_markup=user_img_modify_keybord())
+                             reply_markup=user_img_modify_keyboard())
       bot.answer_callback_query(callback_query_id=call.id, show_alert=False)
   
 # inverse=False for 'add_happiness
@@ -269,7 +279,7 @@ def add_user_img_happiness_wrapper(call, inverse=False):
       bot.capture_data_emotional_img(call.message.chat.id, emotional_img)
       
       bot.edit_message_media(chat_id=call.message.chat.id, message_id=call.message.message_id, 
-                             media=InputMediaPhoto(emotional_img), reply_markup=user_img_modify_keybord())
+                             media=InputMediaPhoto(emotional_img), reply_markup=user_img_modify_keyboard())
       bot.answer_callback_query(callback_query_id=call.id, show_alert=False)  
       
 @bot.callback_query_handler(func=lambda call: call.data.startswith('user_img_add_happiness'))
@@ -287,7 +297,7 @@ def command_captured_usr_img(message):
       ae_format, _ = ae.feed_photo(user_img)
       photo = TelebotWrapper.to_photo(ae_format)
       bot.send_photo(message.chat.id, photo, reply_to_message_id=message.message_id,
-                     reply_markup=user_img_predict_keybord())
+                     reply_markup=user_img_predict_keyboard())
     else:
       bot.send_message(message.chat.id, MsgTemplate.captured_usr_img(sucess=False))
 
