@@ -5,7 +5,7 @@ from keras.layers import Input, InputLayer, Dense, BatchNormalization, Dropout, 
 
 
 class Autoencoder:
-    def __init__(self, img_shape=(90, 90, 3), code_size=128, hidden_size=512):
+    def __init__(self, img_shape=(90, 90, 3), code_size=128, hidden_size=512, load_default_pretrained_weights=False):
         # Basic input parameters
         self.img_shape = img_shape
         self.code_size = code_size
@@ -13,6 +13,7 @@ class Autoencoder:
         self.default_weights_folder = "model_weights"
         self.default_encoder_weights_path = f"{self.default_weights_folder}/encoder_weights.txt"
         self.default_decoder_weights_path = f"{self.default_weights_folder}/decoder_weights.txt"
+        self.load_pretrained_weights = load_pretrained_weights
 
         # Compile model
         self.encoder, self.decoder = self.build_autoencoder(img_shape, code_size, hidden_size)
@@ -21,6 +22,10 @@ class Autoencoder:
         reconstruction = self.decoder(code)
         self.autoencoder = Model(inputs=inp, outputs=reconstruction)
         self.autoencoder.compile(optimizer=Adam(lr=0.0001), loss='binary_crossentropy')
+
+        # Load weights if needed
+        if load_default_pretrained_weights:
+            self.load_weights(self.default_encoder_weights_path, self.default_decoder_weights_path)
 
     # \brief Fit method wrapper
     # Note that y_train == x_train, y_val == x_val, because this is unsupervised learning model

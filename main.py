@@ -1,16 +1,19 @@
 import time
-import os
 import sys
 import requests
-import random
 import re
+
+from autoencoder.model import Autoencoder
 
 import tokens
 import telebot
 from bot_utils.telebot_wrapper import TelebotWrapper
+from bot_utils.msg_template import MsgTemplate
 from telebot.types import InlineKeyboardButton as Button, InlineKeyboardMarkup
 
+
 bot = TelebotWrapper(tokens.bot, threaded=False)
+ae = Autoencoder(load_default_pretrained_weights=True)
 
 def commands_handler(cmnds):
     def wrapped(message):
@@ -23,13 +26,11 @@ def commands_handler(cmnds):
 
 @bot.message_handler(func=commands_handler(['/start']))
 def command_start(message):
-    msg = "Привет! Перед вами бот"
-    bot.send_message(message.chat.id, msg)
+    bot.send_message(message.chat.id, MsgTemplate.start_respond())
     
 @bot.message_handler(func=commands_handler(['/help']))
 def command_help(message):
-    msg = "help text"
-    bot.send_message(message.chat.id, msg)  
+    bot.send_message(message.chat.id, MsgTemplate.help_respond())
     
 def heheh(call):
   print(12312312)
@@ -64,23 +65,20 @@ def photo(message):
     try:
       downloaded_file = bot.download_file(file_info.file_path)
       with open("image.jpg", 'wb') as new_file:
-          new_file.write(downloaded_file)    
-      
-      msg = "thanks!"
-      bot.send_message(message.chat.id, msg)
+          new_file.write(downloaded_file)
       
       file= open('uvojenie.png','rb')
       bot.send_photo(message.chat.id, file);
+      bot.send_message(message.chat.id, MsgTemplate.get_photo_respond(sucess=True))
       
     except:
-      msg = "ooops! try another image"    
-      bot.send_message(message.chat.id, msg)
+      bot.send_message(message.chat.id, MsgTemplate.get_photo_respond(sucess=False))
 
-    
+
 @bot.message_handler(content_types=["text"])
-def repeat_all_messages(message):
-    msg = "Send a photo or press /help"
-    bot.send_message(message.chat.id, msg)
+def other_messages(message):
+    bot.send_message(message.chat.id, MsgTemplate.default_respond())
+
 
 if __name__ == '__main__':
     while True:
