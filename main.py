@@ -201,7 +201,7 @@ def command_normal_code_img(message):
 
 @bot.message_handler(func=commands_handler(['/normal_code_img_0_1']))
 def command_normal_code_img_0_1(message):    
-    mu, sigma = 0, 1      
+    mu, sigma = float(0), float(1)
     normal_code = np.random.normal(mu, sigma, ae.code_size) 
     bot.capture_data_normal_code(message.chat.id, normal_code)
     res = ae._predict_code_reconstruction(normal_code)      
