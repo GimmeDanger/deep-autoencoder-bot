@@ -1,2 +1,1 @@
-autoencoder/colab_experiments.ipynb linguist-vendored
-autoencoder/colab_train.ipynb linguist-vendored
+autoencoder/train/* linguist-vendored
