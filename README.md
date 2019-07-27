@@ -24,8 +24,10 @@
 > ![](.github/normal_code_4.jpeg)
 ### Нажимаем кнопку boo..
 > ![](.github/boo_0.jpeg)
+###
 > ![](.github/boo_1.jpeg)
 
 ### /captured_usr_img
 > ![](.github/capture_img_0.jpeg)
+###
 > ![](.github/capture_img_1.jpeg)
