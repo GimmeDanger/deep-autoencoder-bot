@@ -1,0 +1,5 @@
+scikit-image>=0.15.0
+tensorflow>=1.14.0
+keras>=2.2.4
+requests>=2.7.0
+pytelegrambotapi>=3.6.6
